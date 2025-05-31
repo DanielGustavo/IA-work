@@ -1,5 +1,6 @@
 from MLP import MLP
- 
+import numpy as np
+
 # --- Configuração e Execução do Problema de Classificação de Dígitos ---
 
 # Dados de treinamento conforme especificado no "TrabalhoRNA.pdf"
