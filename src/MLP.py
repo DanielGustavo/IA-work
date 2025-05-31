@@ -29,6 +29,7 @@ class MLP:
         # Pesos da camada de entrada para a camada oculta (input_neurons x hidden_neurons)
         self.pesos_entrada_oculta = np.random.uniform(low=-0.1, high=0.1, size=(self.input_neurons, self.hidden_neurons))
         # Vieses da camada oculta (1 x hidden_neurons)
+
         self.vieses_oculta = np.random.uniform(low=-0.1, high=0.1, size=(1, self.hidden_neurons))
 
         # Pesos da camada oculta para a camada de saída (hidden_neurons x output_neurons)
@@ -36,7 +37,6 @@ class MLP:
         # Vieses da camada de saída (1 x output_neurons)
         self.vieses_saida = np.random.uniform(low=-0.1, high=0.1, size=(1, self.output_neurons))
 
-    @staticmethod
     def sigmoide(x):
         """
         Função de ativação Sigmoide.
@@ -44,7 +44,6 @@ class MLP:
         """
         return 1 / (1 + np.exp(-x))
 
-    @staticmethod
     def derivada_sigmoide(x):
         """
         Derivada da função Sigmoide.
