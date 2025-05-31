@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np # Importa a biblioteca NumPy para operações numéricas eficientes.
 
 class MLP:
     """
