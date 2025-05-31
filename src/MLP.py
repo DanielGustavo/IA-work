@@ -1,89 +1,179 @@
 import numpy as np
 
 class MLP:
-    def __init__(self, input_size, hidden_size, output_size, learning_rate=0.1):
+    """
+    Classe que implementa uma Rede Neural Perceptron de Múltiplas Camadas (MLP)
+    com o algoritmo Backpropagation para treinamento.
+    """
+
+    def __init__(self, input_neurons, hidden_neurons, output_neurons, learning_rate):
+        """
+        Construtor da classe MLP.
+        Inicializa a arquitetura da rede e os pesos/vieses.
+
+        Args:
+            input_neurons (int): Número de neurônios na camada de entrada.
+            hidden_neurons (int): Número de neurônios na camada oculta.
+            output_neurons (int): Número de neurônios na camada de saída.
+            learning_rate (float): Taxa de aprendizado para o ajuste dos pesos.
+        """
+        self.input_neurons = input_neurons
+        self.hidden_neurons = hidden_neurons
+        self.output_neurons = output_neurons
         self.learning_rate = learning_rate
 
-        # Inicializa os pesos sinápticos e biases com valores aleatórios entre -1 e 1.
-        # Pesos da camada de entrada para a camada oculta (W_ji^o nos slides)
-        self.weights_ih = np.random.uniform(-1, 1, (input_size, hidden_size))
-        self.bias_h = np.random.uniform(-1, 1, (1, hidden_size))
+        # --- Inicialização de Pesos e Vieses (Bias) ---
+        # Pesos e vieses são inicializados aleatoriamente com valores pequenos
+        # para evitar saturação inicial das funções de ativação.
 
-        # Pesos da camada oculta para a camada de saída (W_kj^s nos slides)
-        self.weights_ho = np.random.uniform(-1, 1, (hidden_size, output_size))
-        self.bias_o = np.random.uniform(-1, 1, (1, output_size))
+        # Pesos da camada de entrada para a camada oculta (input_neurons x hidden_neurons)
+        self.pesos_entrada_oculta = np.random.uniform(low=-0.1, high=0.1, size=(self.input_neurons, self.hidden_neurons))
+        # Vieses da camada oculta (1 x hidden_neurons)
+        self.vieses_oculta = np.random.uniform(low=-0.1, high=0.1, size=(1, self.hidden_neurons))
 
-    def linear(self, x):
-        return x
+        # Pesos da camada oculta para a camada de saída (hidden_neurons x output_neurons)
+        self.pesos_oculta_saida = np.random.uniform(low=-0.1, high=0.1, size=(self.hidden_neurons, self.output_neurons))
+        # Vieses da camada de saída (1 x output_neurons)
+        self.vieses_saida = np.random.uniform(low=-0.1, high=0.1, size=(1, self.output_neurons))
 
-    def linear_derivative(self, x):
-        return 1
+    @staticmethod
+    def sigmoide(x):
+        """
+        Função de ativação Sigmoide.
+        É um método estático porque não depende de nenhuma instância da classe.
+        """
+        return 1 / (1 + np.exp(-x))
 
-    def tanh(self, x):
-        return np.tanh(x)
+    @staticmethod
+    def derivada_sigmoide(x):
+        """
+        Derivada da função Sigmoide.
+        Também é um método estático.
+        """
+        s = MLP.sigmoide(x) # Chama a função sigmoide através do nome da classe
+        return s * (1 - s)
 
-    def tanh_derivative(self, x):
-        # f'(x) = 1 - (f(x))^2
-        return 1 - (np.tanh(x))**2
+    def feedforward(self, X_input):
+        """
+        Realiza a propagação para frente (feedforward) através da rede.
 
-    def forward_pass(self, inputs):
-        # Etapa 3: Calcula os nets dos neurônios da camada oculta
-        # net_j^o = sum(x_i * w_j,i^o) + b_j^o
-        self.hidden_net = np.dot(inputs, self.weights_ih) + self.bias_h
-        # Etapa 4: Aplica a função de transferência para obter as saídas da camada oculta
-        self.hidden_output = self.tanh(self.hidden_net) # Usando tanh como função não linear
+        Args:
+            X_input (np.array): As entradas para a rede.
 
-        # Etapa 5: Calcula os nets dos neurônios da camada de saída
-        # net_k^s = sum(i_j * w_k,j^s) + b_k^s
-        self.output_net = np.dot(self.hidden_output, self.weights_ho) + self.bias_o
-        # Etapa 6: Calcula as saídas Ok dos neurônios da camada de saída
-        self.predicted_output = self.linear(self.output_net) # Usando linear para a saída
+        Returns:
+            tuple: Uma tupla contendo as saídas da camada oculta (a_oculta)
+                   e as saídas da camada de saída (a_saida).
+        """
+        # 1. Calculando a entrada ponderada para a camada oculta (Z_oculta)
+        self.z_oculta = np.dot(X_input, self.pesos_entrada_oculta) + self.vieses_oculta
 
-        return self.predicted_output
+        # 2. Aplicando a função de ativação na camada oculta (A_oculta)
+        self.a_oculta = MLP.sigmoide(self.z_oculta)
 
-    def backward_pass(self, inputs, desired_output):
-        # Etapa 7: Calcula os erros para os neurônios da camada de saída
-        # delta_k^s = (d_k - o_k) * f_k^s'(net_k^s)
-        output_error = desired_output - self.predicted_output
-        # Para a função linear, a derivada é 1, então (d_k - o_k) * 1
-        output_delta = output_error * self.linear_derivative(self.output_net)
+        # 3. Calculando a entrada ponderada para a camada de saída (Z_saida)
+        self.z_saida = np.dot(self.a_oculta, self.pesos_oculta_saida) + self.vieses_saida
 
-        # Etapa 8: Calcula os erros nos neurônios da camada oculta
-        # delta_j^o = f_j^o'(net_j^o) * sum(delta_k^s * w_k,j)
-        hidden_error = np.dot(output_delta, self.weights_ho.T)
-        hidden_delta = hidden_error * self.tanh_derivative(self.hidden_net)
+        # 4. Aplicando a função de ativação na camada de saída (A_saida)
+        self.a_saida = MLP.sigmoide(self.z_saida)
 
-        # Etapa 9: Atualiza os pesos da camada de saída
-        # w_kj^s = w_kj^s + (n) * (delta_k^s) * (X_j)
-        self.weights_ho += self.learning_rate * np.dot(self.hidden_output.T, output_delta)
-        self.bias_o += self.learning_rate * output_delta # Atualiza o bias da saída
+        return self.a_oculta, self.a_saida
 
-        # Etapa 10: Atualiza os pesos da camada oculta
-        # w_ji^o = w_ji^o + (n) * (delta_j^h) * (x_i)
-        self.weights_ih += self.learning_rate * np.dot(inputs.T, hidden_delta)
-        self.bias_h += self.learning_rate * hidden_delta # Atualiza o bias da camada oculta
+    def backpropagation(self, X_input, y_desejada, a_oculta, a_saida):
+        """
+        Realiza a propagação para trás (backpropagation) e calcula os gradientes.
 
-        # Etapa 11: Calcula o erro da rede (para monitoramento)
-        E_r = 0.5 * np.sum(output_error**2)
-        return E_r
+        Args:
+            X_input (np.array): As entradas originais.
+            y_desejada (np.array): As saídas desejadas para as entradas.
+            a_oculta (np.array): As saídas da camada oculta (do feedforward).
+            a_saida (np.array): As saídas da camada de saída (do feedforward).
 
-    def train(self, training_data, epochs, error_threshold=0.001):
-        print("Iniciando o treinamento da rede...")
+        Returns:
+            tuple: Uma tupla contendo os gradientes para os pesos e vieses
+                   (d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta).
+        """
+        # 1. Calculando o erro na camada de saída
+        erro_saida = y_desejada - a_saida
+
+        # 2. Calculando o delta (gradiente local) da camada de saída
+        delta_saida = erro_saida * MLP.derivada_sigmoide(self.z_saida)
+
+        # 3. Calculando o erro na camada oculta (retropropagando o erro da saída)
+        erro_oculta = np.dot(delta_saida, self.pesos_oculta_saida.T)
+
+        # 4. Calculando o delta (gradiente local) da camada oculta
+        delta_oculta = erro_oculta * MLP.derivada_sigmoide(self.z_oculta)
+
+        # Calculando os gradientes para atualização
+        d_pesos_oculta_saida = np.dot(a_oculta.T, delta_saida)
+        d_vieses_saida = np.sum(delta_saida, axis=0, keepdims=True)
+        d_pesos_entrada_oculta = np.dot(X_input.T, delta_oculta)
+        d_vieses_oculta = np.sum(delta_oculta, axis=0, keepdims=True)
+
+        return d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta
+
+    def update_weights(self, d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta):
+        """
+        Atualiza os pesos e vieses da rede usando os gradientes calculados.
+
+        Args:
+            d_pesos_oculta_saida (np.array): Gradiente dos pesos da camada oculta para a saída.
+            d_vieses_saida (np.array): Gradiente dos vieses da camada de saída.
+            d_pesos_entrada_oculta (np.array): Gradiente dos pesos da entrada para a camada oculta.
+            d_vieses_oculta (np.array): Gradiente dos vieses da camada oculta.
+        """
+        self.pesos_oculta_saida += d_pesos_oculta_saida * self.learning_rate
+        self.vieses_saida += d_vieses_saida * self.learning_rate
+        self.pesos_entrada_oculta += d_pesos_entrada_oculta * self.learning_rate
+        self.vieses_oculta += d_vieses_oculta * self.learning_rate
+
+    def train(self, X_train, y_train, epochs):
+        """
+        Treina a rede neural usando o algoritmo Backpropagation.
+
+        Args:
+            X_train (np.array): Dados de entrada para treinamento.
+            y_train (np.array): Saídas desejadas para treinamento.
+            epochs (int): Número de épocas para o treinamento.
+        """
+        print("Iniciando o treinamento da MLP com Backpropagation...")
+        print(f"Camada de Entrada: {self.input_neurons} neurônio(s)")
+        print(f"Camada Oculta: {self.hidden_neurons} neurônio(s)")
+        print(f"Camada de Saída: {self.output_neurons} neurônio(s)")
+        print(f"Taxa de Aprendizado: {self.learning_rate}")
+        print(f"Número de Épocas: {epochs}")
+        print("-" * 50)
+
         for epoch in range(epochs):
-            total_epoch_error = 0
-            for inputs, desired_output in training_data:
-                # Garante que as entradas e saídas desejadas tenham a forma correta
-                inputs = np.array(inputs).reshape(1, -1)
-                desired_output = np.array(desired_output).reshape(1, -1)
+            # Realiza o feedforward
+            a_oculta, a_saida = self.feedforward(X_train)
 
-                self.forward_pass(inputs)
-                total_epoch_error += self.backward_pass(inputs, desired_output)
+            # Realiza o backpropagation e calcula os gradientes
+            d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta = \
+                self.backpropagation(X_train, y_train, a_oculta, a_saida)
 
-            # Verifica se o erro total da época está abaixo do limiar
-            if total_epoch_error < error_threshold:
-                print(f"Treinamento parado na época {epoch+1} devido ao limiar de erro ({error_threshold:.4f}) atingido.")
-                break
-            if (epoch + 1) % 1000 == 0: # Imprime o erro a cada 1000 épocas
-                print(f"Época {epoch+1}, Erro Total: {total_epoch_error:.6f}")
-        print("Treinamento concluído.")
+            # Atualiza os pesos e vieses
+            self.update_weights(d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta)
 
+            # Monitoramento do Erro
+            if epoch % 1000 == 0:
+                loss = np.mean(np.square(y_train - a_saida)) # Erro Quadrático Médio (MSE)
+                print(f"Época {epoch}, Erro: {loss:.6f}")
+
+        print("-" * 50)
+        print("Treinamento concluído!")
+
+    def predict(self, X_test):
+        """
+        Faz previsões com a rede neural treinada.
+
+        Args:
+            X_test (np.array): Dados de entrada para fazer previsões.
+
+        Returns:
+            np.array: As saídas arredondadas da rede (classificação final).
+        """
+        # Realiza o feedforward para as entradas de teste
+        _, previsoes_finais = self.feedforward(X_test)
+        # Arredonda as saídas para 0 ou 1 para a classificação binária
+        return np.round(previsoes_finais)
