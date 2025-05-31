@@ -1,4 +1,4 @@
-import MLP
+from MLP import MLP
  
 # --- Configuração e Execução do Problema de Classificação de Dígitos ---
 
