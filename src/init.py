@@ -17,14 +17,26 @@ expectedY = np.array([item[1] for item in trainingData])
 
 # Configuração da Arquitetura da Rede
 inputNeurons = inputX.shape[1]
-hiddenNeurons = 16
+hiddenNeurons = 5
 outputNeurons = expectedY.shape[1]
-learningRate = 1
+learningRate = 0.2
 epochs = 20000
 
 # Treinamento da Rede
 neuralNet = MLP(inputNeurons, hiddenNeurons, outputNeurons, learningRate)
+         
+print("Iniciando o treinamento da MLP com Backpropagation...")
+print(f"Camada de Entrada: {inputNeurons} neurônio(s)")
+print(f"Camada Oculta: {hiddenNeurons} neurônio(s)")
+print(f"Camada de Saída: {outputNeurons} neurônio(s)")
+print(f"Taxa de Aprendizado: {learningRate}")
+print(f"Número de Épocas: {epochs}")
+print("-" * 50)
+ 
 neuralNet.train(inputX, expectedY, epochs)
+         
+print("-" * 50)
+print("Treinamento concluído!")
 
 # Teste da Rede Treinada
 print("\n--- Testando a Rede Treinada ---")

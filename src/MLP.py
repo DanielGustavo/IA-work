@@ -43,52 +43,30 @@ class MLP:
         # Etapa 8
         hiddenDelta = MLP.sigmoideDerivate(self.hiddenLayer1) * np.dot(outputDelta, self.hiddenOutputWeights.T)
 
+        return outputDelta, hiddenDelta
+
+    def updateWeights(self, outputDelta, hiddenDelta, inputX):
         # Etapa 9
-        d_pesos_oculta_saida = np.dot(outputHiddenLayer1.T, outputDelta)
-        d_vieses_saida = np.sum(outputDelta, axis=0, keepdims=True)
+        self.hiddenOutputWeights += np.dot(self.outputHiddenLayer1.T, outputDelta) * self.learningRate
+        self.outputBias += np.sum(outputDelta, axis=0, keepdims=True) * self.learningRate
 
         # Etapa 10
-        d_pesos_entrada_oculta = np.dot(inputX.T, hiddenDelta)
-        d_vieses_oculta = np.sum(hiddenDelta, axis=0, keepdims=True)
+        self.hiddenInputWeights += np.dot(inputX.T, hiddenDelta) * self.learningRate
+        self.hiddenBias += np.sum(hiddenDelta, axis=0, keepdims=True) * self.learningRate
 
-        return d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta
-
-    def update_weights(self, d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta):
-        # Etapa 9
-        self.hiddenOutputWeights += d_pesos_oculta_saida * self.learningRate
-        self.outputBias += d_vieses_saida * self.learningRate
-
-        # Etapa 10
-        self.hiddenInputWeights += d_pesos_entrada_oculta * self.learningRate
-        self.hiddenBias += d_vieses_oculta * self.learningRate
-
-    def train(self, X_train, y_train, epochs):
-        print("Iniciando o treinamento da MLP com Backpropagation...")
-        print(f"Camada de Entrada: {self.inputNeurons} neurônio(s)")
-        print(f"Camada Oculta: {self.hiddenNeurons} neurônio(s)")
-        print(f"Camada de Saída: {self.outputNeurons} neurônio(s)")
-        print(f"Taxa de Aprendizado: {self.learningRate}")
-        print(f"Número de Épocas: {epochs}")
-        print("-" * 50)
-
+    def train(self, inputX, expectedY, epochs):
         for epoch in range(epochs):
-            outputHiddenLayer1, outputHiddenLayer2 = self.feedforward(X_train)
+            outputHiddenLayer1, outputHiddenLayer2 = self.feedforward(inputX)
 
-            d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta = \
-                self.backPropagation(X_train, y_train, outputHiddenLayer1, outputHiddenLayer2)
+            outputDelta, hiddenDelta = self.backPropagation(inputX, expectedY, outputHiddenLayer1, outputHiddenLayer2)
 
-            self.update_weights(d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta)
+            self.updateWeights(outputDelta, hiddenDelta, inputX)
 
             # Monitoramento do Erro
             if epoch % 1000 == 0:
-                loss = 0.5 * np.sum(np.square((y_train - outputHiddenLayer2)))
+                loss = 0.5 * np.sum(np.square((expectedY - outputHiddenLayer2)))
                 print(f"Época {epoch}, Erro: {loss}")
 
-        print("-" * 50)
-        print("Treinamento concluído!")
-
-    def predict(self, X_test):
-        # Realiza o feedforward para as entradas de teste
-        _, previsoes_finais = self.feedforward(X_test)
-        # Arredonda as saídas para 0 ou 1 para a classificação binária
-        return np.round(previsoes_finais)
+    def predict(self, inputX):
+        _, predictionResult = self.feedforward(inputX)
+        return np.round(predictionResult)
