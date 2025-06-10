@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class MLP:
     def __init__(self, input_neurons, hidden_neurons, output_neurons, learning_rate):
         # Etapa 1
