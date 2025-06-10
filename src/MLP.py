@@ -41,51 +41,34 @@ class MLP:
 
         return self.outputHiddenLayer1, self.outputHiddenLayer2
 
-    def backpropagation(self, X_input, y_desejada, a_oculta, a_saida):
-        # Calculando o erro na camada de saída
-        erro_saida = y_desejada - a_saida
+    def backpropagation(self, X_input, y_desejada, outputHiddenLayer1, outputHiddenLayer2):
+        # Etapa 7
+        erro_saida = y_desejada - outputHiddenLayer2 # Calculando o erro na camada de saída
+        delta_saida = erro_saida * MLP.derivada_sigmoide(self.hiddenLayer2) # Calculando o delta (gradiente local) da camada de saída
 
-        # Calculando o delta (gradiente local) da camada de saída
-        delta_saida = erro_saida * MLP.derivada_sigmoide(self.hiddenLayer2)
+        # Etapa 8
+        delta_oculta = MLP.derivada_sigmoide(self.hiddenLayer1) * np.dot(delta_saida, self.pesos_oculta_saida.T)
 
-        # Calculando o erro na camada oculta (retropropagando o erro da saída)
-        erro_oculta = np.dot(delta_saida, self.pesos_oculta_saida.T)
-
-        # Calculando o delta (gradiente local) da camada oculta
-        delta_oculta = erro_oculta * MLP.derivada_sigmoide(self.hiddenLayer1)
-
-        # Calculando os gradientes para atualização
-        d_pesos_oculta_saida = np.dot(a_oculta.T, delta_saida)
+        # Calculando os gradientes para atualização (Etapa 9)
+        d_pesos_oculta_saida = np.dot(outputHiddenLayer1.T, delta_saida)
         d_vieses_saida = np.sum(delta_saida, axis=0, keepdims=True)
+
+        # Calculando os gradientes para atualização (Etapa 10)
         d_pesos_entrada_oculta = np.dot(X_input.T, delta_oculta)
         d_vieses_oculta = np.sum(delta_oculta, axis=0, keepdims=True)
 
         return d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta
 
     def update_weights(self, d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta):
-        """
-        Atualiza os pesos e vieses da rede usando os gradientes calculados.
-
-        Args:
-            d_pesos_oculta_saida (np.array): Gradiente dos pesos da camada oculta para a saída.
-            d_vieses_saida (np.array): Gradiente dos vieses da camada de saída.
-            d_pesos_entrada_oculta (np.array): Gradiente dos pesos da entrada para a camada oculta.
-            d_vieses_oculta (np.array): Gradiente dos vieses da camada oculta.
-        """
+        # Etapa 9
         self.pesos_oculta_saida += d_pesos_oculta_saida * self.learning_rate
         self.vieses_saida += d_vieses_saida * self.learning_rate
+
+        # Etapa 10
         self.pesos_entrada_oculta += d_pesos_entrada_oculta * self.learning_rate
         self.vieses_oculta += d_vieses_oculta * self.learning_rate
 
     def train(self, X_train, y_train, epochs):
-        """
-        Treina a rede neural usando o algoritmo Backpropagation.
-
-        Args:
-            X_train (np.array): Dados de entrada para treinamento.
-            y_train (np.array): Saídas desejadas para treinamento.
-            epochs (int): Número de épocas para o treinamento.
-        """
         print("Iniciando o treinamento da MLP com Backpropagation...")
         print(f"Camada de Entrada: {self.input_neurons} neurônio(s)")
         print(f"Camada Oculta: {self.hidden_neurons} neurônio(s)")
@@ -95,34 +78,22 @@ class MLP:
         print("-" * 50)
 
         for epoch in range(epochs):
-            # Realiza o feedforward
-            a_oculta, a_saida = self.feedforward(X_train)
+            outputHiddenLayer1, outputHiddenLayer2 = self.feedforward(X_train)
 
-            # Realiza o backpropagation e calcula os gradientes
             d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta = \
-                self.backpropagation(X_train, y_train, a_oculta, a_saida)
+                self.backpropagation(X_train, y_train, outputHiddenLayer1, outputHiddenLayer2)
 
-            # Atualiza os pesos e vieses
             self.update_weights(d_pesos_oculta_saida, d_vieses_saida, d_pesos_entrada_oculta, d_vieses_oculta)
 
             # Monitoramento do Erro
             if epoch % 1000 == 0:
-                loss = np.mean(np.square(y_train - a_saida)) # Erro Quadrático Médio (MSE)
-                print(f"Época {epoch}, Erro: {loss:.6f}")
+                loss = 0.5 * np.sum(np.square((y_train - outputHiddenLayer2)))
+                print(f"Época {epoch}, Erro: {loss}")
 
         print("-" * 50)
         print("Treinamento concluído!")
 
     def predict(self, X_test):
-        """
-        Faz previsões com a rede neural treinada.
-
-        Args:
-            X_test (np.array): Dados de entrada para fazer previsões.
-
-        Returns:
-            np.array: As saídas arredondadas da rede (classificação final).
-        """
         # Realiza o feedforward para as entradas de teste
         _, previsoes_finais = self.feedforward(X_test)
         # Arredonda as saídas para 0 ou 1 para a classificação binária

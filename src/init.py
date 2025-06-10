@@ -20,7 +20,7 @@ input_neurons = X.shape[1]
 hidden_neurons = 5
 output_neurons = y_desejada.shape[1]
 learning_rate = 0.1
-epochs = 20000
+epochs = 50000
 
 # Treinamento da Rede
 # Chamamos o método train da instância da rede, passando os dados de treinamento e o número de épocas.
