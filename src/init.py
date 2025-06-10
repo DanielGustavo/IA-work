@@ -15,19 +15,21 @@ training_data = [
 X = np.array([item[0] for item in training_data])
 y_desejada = np.array([item[1] for item in training_data])
 
-# 2. Configuração da Arquitetura da Rede
+# Configuração da Arquitetura da Rede
 input_neurons = X.shape[1]
 hidden_neurons = 5
 output_neurons = y_desejada.shape[1]
 learning_rate = 0.1
 epochs = 20000
 
-# 3. Treinamento da Rede
+# Treinamento da Rede
 # Chamamos o método train da instância da rede, passando os dados de treinamento e o número de épocas.
 rede_neural = MLP(input_neurons, hidden_neurons, output_neurons, learning_rate)
+ 
+# Etapa 2
 rede_neural.train(X, y_desejada, epochs)
 
-# 5. Teste da Rede Treinada
+# Teste da Rede Treinada
 print("\n--- Testando a Rede Treinada ---")
 
 previsoes_arredondadas = rede_neural.predict(X)

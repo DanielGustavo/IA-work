@@ -3,6 +3,7 @@ import numpy as np
 
 class MLP:
     def __init__(self, input_neurons, hidden_neurons, output_neurons, learning_rate):
+        # Etapa 1
         self.input_neurons = input_neurons
         self.hidden_neurons = hidden_neurons
         self.output_neurons = output_neurons
@@ -22,32 +23,36 @@ class MLP:
         return s * (1 - s)
 
     def feedforward(self, X_input):
-        # 1. Calculando a entrada ponderada para a camada oculta (Z_oculta)
-        self.z_oculta = np.dot(X_input, self.pesos_entrada_oculta) + self.vieses_oculta
+        # Calculando a entrada ponderada para a camada oculta (Z_oculta)
+        # Etapa 3
+        self.hiddenLayer1 = np.dot(X_input, self.pesos_entrada_oculta) + self.vieses_oculta
 
-        # 2. Aplicando a função de ativação na camada oculta (A_oculta)
-        self.a_oculta = MLP.sigmoide(self.z_oculta)
+        # Aplicando a função de ativação na camada oculta (A_oculta)
+        # Etapa 4
+        self.outputHiddenLayer1 = MLP.sigmoide(self.hiddenLayer1)
 
-        # 3. Calculando a entrada ponderada para a camada de saída (Z_saida)
-        self.z_saida = np.dot(self.a_oculta, self.pesos_oculta_saida) + self.vieses_saida
+        # Calculando a entrada ponderada para a camada de saída (Z_saida)
+        # Etapa 5
+        self.hiddenLayer2 = np.dot(self.outputHiddenLayer1, self.pesos_oculta_saida) + self.vieses_saida
 
-        # 4. Aplicando a função de ativação na camada de saída (A_saida)
-        self.a_saida = MLP.sigmoide(self.z_saida)
+        # Aplicando a função de ativação na camada de saída (A_saida)
+        # Etapa 6
+        self.outputHiddenLayer2 = MLP.sigmoide(self.hiddenLayer2)
 
-        return self.a_oculta, self.a_saida
+        return self.outputHiddenLayer1, self.outputHiddenLayer2
 
     def backpropagation(self, X_input, y_desejada, a_oculta, a_saida):
-        # 1. Calculando o erro na camada de saída
+        # Calculando o erro na camada de saída
         erro_saida = y_desejada - a_saida
 
-        # 2. Calculando o delta (gradiente local) da camada de saída
-        delta_saida = erro_saida * MLP.derivada_sigmoide(self.z_saida)
+        # Calculando o delta (gradiente local) da camada de saída
+        delta_saida = erro_saida * MLP.derivada_sigmoide(self.hiddenLayer2)
 
-        # 3. Calculando o erro na camada oculta (retropropagando o erro da saída)
+        # Calculando o erro na camada oculta (retropropagando o erro da saída)
         erro_oculta = np.dot(delta_saida, self.pesos_oculta_saida.T)
 
-        # 4. Calculando o delta (gradiente local) da camada oculta
-        delta_oculta = erro_oculta * MLP.derivada_sigmoide(self.z_oculta)
+        # Calculando o delta (gradiente local) da camada oculta
+        delta_oculta = erro_oculta * MLP.derivada_sigmoide(self.hiddenLayer1)
 
         # Calculando os gradientes para atualização
         d_pesos_oculta_saida = np.dot(a_oculta.T, delta_saida)
