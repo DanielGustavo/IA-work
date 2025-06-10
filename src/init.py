@@ -17,9 +17,9 @@ expectedY = np.array([item[1] for item in trainingData])
 
 # Configuração da Arquitetura da Rede
 inputNeurons = inputX.shape[1]
-hiddenNeurons = 5
+hiddenNeurons = 16
 outputNeurons = expectedY.shape[1]
-learningRate = 0.1
+learningRate = 1
 epochs = 20000
 
 # Treinamento da Rede
