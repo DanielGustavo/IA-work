@@ -1,4 +1,4 @@
 run:
-	python3 src/init.py
+	venv/bin/python3 src/init.py
 install:
-	pip3 install -r requirements.txt
+	venv/bin/pip3 install -r requirements.txt
